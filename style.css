@@ -121,3 +121,19 @@ html, body {
   }
   
   
+
+  #angleList {
+    position: absolute;
+    bottom: 20px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 14px;
+    padding: 10px;
+    border-radius: 8px;
+    max-width: 40vw;
+    z-index: 10;
+    font-family: monospace;
+    line-height: 1.4;
+  }
+  

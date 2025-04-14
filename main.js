@@ -165,35 +165,32 @@ const skeletonBySide = {
 };
 
 function drawKeypoints(keypoints) {
-  const side = sideSelect.value;
-  const allowedNames = new Set(keypointsBySide[side]);
-
-  // Puntos
-  keypoints.forEach(kp => {
-    if (kp.score > 0.5 && allowedNames.has(kp.name)) {
-      ctx.beginPath();
-      ctx.arc(kp.x, kp.y, 5, 0, 2 * Math.PI);
-      ctx.fillStyle = 'red';
-      ctx.fill();
-    }
-  });
-
-  // Esqueleto
-  drawSkeleton(keypoints, side);
-
-  // Ángulos
-  if (side === 'right') {
-    drawAngleBetween(keypoints, 'right_shoulder', 'right_hip', 'right_knee'); // Cadera
-    drawAngleBetween(keypoints, 'right_elbow', 'right_shoulder', 'right_hip'); // Hombro
-    drawAngleBetween(keypoints, 'right_shoulder', 'right_elbow', 'right_wrist'); // Codo
-    drawAngleBetween(keypoints, 'right_hip', 'right_knee', 'right_ankle'); // Rodilla
-  } else {
-    drawAngleBetween(keypoints, 'left_shoulder', 'left_hip', 'left_knee');
-    drawAngleBetween(keypoints, 'left_elbow', 'left_shoulder', 'left_hip');
-    drawAngleBetween(keypoints, 'left_shoulder', 'left_elbow', 'left_wrist');
-    drawAngleBetween(keypoints, 'left_hip', 'left_knee', 'left_ankle');
+    const side = sideSelect.value;
+    const prefix = side === 'right' ? 'right_' : 'left_';
+    currentAngles = [];
+  
+    const allowedNames = new Set(keypointsBySide[side]);
+  
+    keypoints.forEach(kp => {
+      if (kp.score > 0.5 && allowedNames.has(kp.name)) {
+        ctx.beginPath();
+        ctx.arc(kp.x, kp.y, 5, 0, 2 * Math.PI);
+        ctx.fillStyle = 'red';
+        ctx.fill();
+      }
+    });
+  
+    drawSkeleton(keypoints, side);
+  
+    drawAngleBetween(keypoints, `${prefix}shoulder`, `${prefix}hip`, `${prefix}knee`, 'Cadera');
+    drawAngleBetween(keypoints, `${prefix}elbow`, `${prefix}shoulder`, `${prefix}hip`, 'Hombro');
+    drawAngleBetween(keypoints, `${prefix}shoulder`, `${prefix}elbow`, `${prefix}wrist`, 'Codo');
+    drawAngleBetween(keypoints, `${prefix}hip`, `${prefix}knee`, `${prefix}ankle`, 'Rodilla');
+    drawAngleBetween(keypoints, `${prefix}knee`, `${prefix}ankle`, `${prefix}foot_index`, 'Tobillo');
+  
+    updateAngleList(currentAngles);
   }
-}
+  
 
 function drawSkeleton(keypoints, side) {
   const pairs = skeletonBySide[side];
@@ -211,7 +208,8 @@ function drawSkeleton(keypoints, side) {
   }
 }
 
-function drawAngleBetween(keypoints, a, b, c) {
+let currentAngles = [];
+function drawAngleBetween(keypoints, a, b, c, label) {
   const p1 = getKeypointByName(keypoints, a);
   const p2 = getKeypointByName(keypoints, b);
   const p3 = getKeypointByName(keypoints, c);
@@ -224,12 +222,27 @@ function drawAngleBetween(keypoints, a, b, c) {
     const mag2 = Math.hypot(...v2);
     const angle = Math.acos(dot / (mag1 * mag2)) * 180 / Math.PI;
 
+    // Dibuja el número sobre el punto
     ctx.fillStyle = 'yellow';
     ctx.font = '16px sans-serif';
     ctx.fillText(`${Math.round(angle)}°`, p2.x + 5, p2.y - 5);
+
+    // Guarda el ángulo en la lista
+    currentAngles.push({ joint: label, angle });
   }
 }
 
+
 function getKeypointByName(keypoints, name) {
   return keypoints.find(kp => kp.name === name && kp.score > 0.5);
+}
+
+
+//Lista de ángulos
+const angleList = document.getElementById('angleList');
+
+function updateAngleList(angleData) {
+  angleList.innerHTML = angleData.map(({ joint, angle }) =>
+    `<div>${joint}: ${Math.round(angle)}°</div>`
+  ).join('');
 }
