@@ -42,10 +42,33 @@ document.getElementById('btnLoadVideo').addEventListener('click', () => {
 
 fileInput.addEventListener('change', handleVideoUpload);
 
-async function getAvailableCameras() {
+async function populateCameraSelect() {
     const devices = await navigator.mediaDevices.enumerateDevices();
-    return devices.filter(device => device.kind === 'videoinput');
+    const cameras = devices.filter(device => device.kind === 'videoinput');
+    const select = document.getElementById('cameraSelect');
+  
+    select.innerHTML = ''; // limpia si ya tenía opciones
+  
+    cameras.forEach((camera, index) => {
+      const label = camera.label || `Camera ${index + 1}`;
+      const option = document.createElement('option');
+      option.value = camera.deviceId;
+      option.textContent = label.includes('back') || label.includes('rear') ? '📷 Rear camera' :
+                           label.includes('front') ? '🤳 Front camera' :
+                           label;
+      select.appendChild(option);
+    });
+  
+    // Muestra el selector si hay más de una
+    if (cameras.length > 0) {
+      select.classList.remove('hidden');
+    } else {
+      select.classList.add('hidden');
+    }
+  
+    return cameras;
   }
+  
   
 
   document.getElementById('btnUseCamera').addEventListener('click', async () => {
@@ -57,19 +80,14 @@ async function getAvailableCameras() {
   
     await loadModel();
   
-    const cameras = await getAvailableCameras();
+    const cameras = await populateCameraSelect();
   
-    let facingMode = 'user'; // default: front camera
-  
-    if (cameras.length > 1) {
-      const useRearCamera = confirm("Use rear camera? Press 'Cancel' for front camera.");
-      facingMode = useRearCamera ? { exact: 'environment' } : 'user';
-    }
+    const selectedDeviceId = document.getElementById('cameraSelect').value;
   
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode,
+          deviceId: { exact: selectedDeviceId },
           width: { ideal: 640 },
           height: { ideal: 480 }
         },
@@ -93,6 +111,7 @@ async function getAvailableCameras() {
       homeScreen.style.display = 'flex';
     }
   });
+  
   
   
 

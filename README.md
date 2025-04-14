@@ -2,6 +2,8 @@
 
 A browser-based web application for analyzing a cyclist's posture from a video or live camera feed. It detects the rider's pose, overlays key joint points, and computes angles of key joints in real-time.
 
+You can try it on [https://mariorht.github.io/bicifit/](https://mariorht.github.io/bicifit/)
+
 ---
 
 ## 🚴‍♂️ Features
