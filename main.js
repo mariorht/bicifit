@@ -14,33 +14,34 @@ const btnNext = document.getElementById('btnNext');
 
 const keypointsBySide = {
     left: [
-      'left_eye', 'left_ear',
       'left_shoulder', 'left_elbow', 'left_wrist',
       'left_hip', 'left_knee', 'left_ankle'
+
     ],
     right: [
-      'right_eye', 'right_ear',
       'right_shoulder', 'right_elbow', 'right_wrist',
       'right_hip', 'right_knee', 'right_ankle'
     ]
-};
+  };
+  
 
-const skeletonBySide = {
+  const skeletonBySide = {
     left: [
-        ['left_shoulder', 'left_elbow'],
-        ['left_elbow', 'left_wrist'],
-        ['left_shoulder', 'left_hip'],
-        ['left_hip', 'left_knee'],
-        ['left_knee', 'left_ankle']
+      ['left_shoulder', 'left_elbow'],
+      ['left_elbow', 'left_wrist'],
+      ['left_shoulder', 'left_hip'],
+      ['left_hip', 'left_knee'],
+      ['left_knee', 'left_ankle'],
     ],
     right: [
-        ['right_shoulder', 'right_elbow'],
-        ['right_elbow', 'right_wrist'],
-        ['right_shoulder', 'right_hip'],
-        ['right_hip', 'right_knee'],
-        ['right_knee', 'right_ankle']
+      ['right_shoulder', 'right_elbow'],
+      ['right_elbow', 'right_wrist'],
+      ['right_shoulder', 'right_hip'],
+      ['right_hip', 'right_knee'],
+      ['right_knee', 'right_ankle'],
     ]
-};
+  };
+  
 
 function getKeypointByName(keypoints, name) {
     return keypoints.find(kp => kp.name === name && kp.score > 0.5);
@@ -102,8 +103,7 @@ async function processFrameLoop() {
 async function processSingleFrame() {
     try {
       const poses = await detector.estimatePoses(video);
-      console.log(`[INFO] Poses received at ${video.currentTime.toFixed(2)}s:`, poses);
-  
+ 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
   
       if (poses.length > 0 && poses[0].keypoints) {
@@ -135,14 +135,18 @@ function drawKeypoints(keypoints) {
 
     // Dibuja ángulos
     if (side === 'right') {
-        drawAngleBetween(keypoints, 'right_shoulder', 'right_elbow', 'right_wrist');
-        drawAngleBetween(keypoints, 'right_hip', 'right_knee', 'right_ankle');
-        drawAngleBetween(keypoints, 'right_elbow', 'right_shoulder', 'right_hip');
-    } else {
-        drawAngleBetween(keypoints, 'left_shoulder', 'left_elbow', 'left_wrist');
-        drawAngleBetween(keypoints, 'left_hip', 'left_knee', 'left_ankle');
-        drawAngleBetween(keypoints, 'left_elbow', 'left_shoulder', 'left_hip');
-    }
+        drawAngleBetween(keypoints, 'right_shoulder', 'right_hip', 'right_knee');   // Cadera
+        drawAngleBetween(keypoints, 'right_elbow', 'right_shoulder', 'right_hip'); // Hombro
+        drawAngleBetween(keypoints, 'right_shoulder', 'right_elbow', 'right_wrist'); // Codo
+        drawAngleBetween(keypoints, 'right_hip', 'right_knee', 'right_ankle');     // Rodilla
+      } else {
+        drawAngleBetween(keypoints, 'left_shoulder', 'left_hip', 'left_knee');     // Cadera
+        drawAngleBetween(keypoints, 'left_elbow', 'left_shoulder', 'left_hip');    // Hombro
+        drawAngleBetween(keypoints, 'left_shoulder', 'left_elbow', 'left_wrist');  // Codo
+        drawAngleBetween(keypoints, 'left_hip', 'left_knee', 'left_ankle');        // Rodilla
+      }
+      
+      
 }
   
   
