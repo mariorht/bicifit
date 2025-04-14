@@ -24,3 +24,12 @@ body {
     pointer-events: none; /* Para que no interfiera en la interacción con el vídeo */
   }
   
+
+  #controls {
+    margin: 10px;
+  }
+  #controls button {
+    font-size: 1rem;
+    margin-right: 5px;
+    padding: 5px 10px;
+  }

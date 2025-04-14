@@ -3,6 +3,15 @@ let fileInput = document.getElementById('fileInput');
 let canvas = document.getElementById('overlay');
 let ctx = canvas.getContext('2d');
 
+let playing = false;
+let frameLoopTimeout = null;
+
+const btnPlay = document.getElementById('btnPlay');
+const btnPause = document.getElementById('btnPause');
+const btnPrev = document.getElementById('btnPrev');
+const btnNext = document.getElementById('btnNext');
+
+
 const keypointsBySide = {
     left: [
       'left_eye', 'left_ear',
@@ -77,18 +86,23 @@ async function loadModel() {
 }
 
 async function processFrameLoop() {
-    if (video.ended || video.currentTime >= video.duration) {
-      console.log('[INFO] Video ended. Restarting...');
-      video.currentTime = 0; // reiniciar
-      setTimeout(processFrameLoop, FRAME_INTERVAL);
-      return;
-    }
-  
-    console.log(`[INFO] Processing at ${video.currentTime.toFixed(2)}s`);
-  
+  if (!playing) return;
+
+  if (video.currentTime >= video.duration) {
+    video.currentTime = 0;
+    return setTimeout(processFrameLoop, FRAME_INTERVAL);
+  }
+
+  await processSingleFrame();
+
+  video.currentTime += FRAME_INTERVAL / 1000;
+  frameLoopTimeout = setTimeout(processFrameLoop, FRAME_INTERVAL);
+}
+
+async function processSingleFrame() {
     try {
       const poses = await detector.estimatePoses(video);
-      console.log('[INFO] Poses received:', poses);
+      console.log(`[INFO] Poses received at ${video.currentTime.toFixed(2)}s:`, poses);
   
       ctx.clearRect(0, 0, canvas.width, canvas.height);
   
@@ -98,12 +112,8 @@ async function processFrameLoop() {
     } catch (err) {
       console.error('[ERROR] Pose estimation failed:', err);
     }
-  
-    // Avanzar al siguiente frame
-    video.currentTime += FRAME_INTERVAL / 1000;
-  
-    setTimeout(processFrameLoop, FRAME_INTERVAL);
   }
+  
   
 
 function drawKeypoints(keypoints) {
@@ -172,4 +182,50 @@ function drawAngleBetween(keypoints, a, b, c) {
       ctx.fillText(`${Math.round(angle)}°`, p2.x + 5, p2.y - 5);
     }
 }
+  
+
+
+btnPlay.addEventListener('click', () => {
+    if (!playing) {
+      playing = true;
+      console.log('[INFO] ▶️ Play');
+      processFrameLoop();
+    }
+  });
+  
+  btnPause.addEventListener('click', () => {
+    playing = false;
+    console.log('[INFO] ⏸️ Pause');
+    clearTimeout(frameLoopTimeout);
+  });
+  
+  btnNext.addEventListener('click', () => {
+    playing = false;
+  
+    // Si estamos al final, reiniciar al principio
+    if (video.currentTime + FRAME_INTERVAL / 1000 >= video.duration) {
+      video.currentTime = 0;
+    } else {
+      video.currentTime += FRAME_INTERVAL / 1000;
+    }
+  
+    setTimeout(() => {
+      processSingleFrame();
+    }, 50);
+  });
+  
+  btnPrev.addEventListener('click', () => {
+    playing = false;
+  
+    // Si estamos al principio, saltar al final
+    if (video.currentTime <= 0) {
+      video.currentTime = Math.max(0, video.duration - FRAME_INTERVAL / 1000);
+    } else {
+      video.currentTime = Math.max(0, video.currentTime - FRAME_INTERVAL / 1000);
+    }
+  
+    setTimeout(() => {
+      processSingleFrame();
+    }, 50);
+  });
   
