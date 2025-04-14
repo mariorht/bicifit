@@ -7,6 +7,15 @@
 </head>
 <body>
   <input type="file" id="fileInput" accept="video/*">
+
+  <label>
+    Orientación:
+    <select id="sideSelect">
+      <option value="right">Mirando a la derecha</option>
+      <option value="left">Mirando a la izquierda</option>
+    </select>
+  </label>
+  
   <div id="container">
     <video id="video" loop muted playsinline></video>
     <canvas id="overlay"></canvas>
