@@ -1,0 +1,26 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 20px;
+  }
+  
+  #container { position: relative; width: fit-content; }
+  video, canvas {
+    position: absolute;
+    top: 0; left: 0;
+  }
+  #fileInput {
+    position: relative;
+    z-index: 1;
+    margin: 10px;
+  }
+  
+  #overlayCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* Se asegura que se renderice encima del vídeo */
+    z-index: 1;
+    pointer-events: none; /* Para que no interfiera en la interacción con el vídeo */
+  }
+  
