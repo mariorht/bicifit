@@ -6,6 +6,9 @@ let fileInput = document.getElementById('fileInput');
 let homeScreen = document.getElementById('home');
 let appScreen = document.getElementById('app');
 
+const angleList = document.getElementById('angleList');
+const noPersonBanner = document.getElementById('noPersonBanner');
+
 let playing = false;
 let detector;
 let frameLoopTimeout = null;
@@ -53,7 +56,7 @@ async function handleVideoUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
   
-    showSpinner(); // 👈 Muestra el spinner
+    showSpinner();
   
     const url = URL.createObjectURL(file);
     video.src = url;
@@ -68,11 +71,20 @@ async function handleVideoUpload(event) {
   
       homeScreen.style.display = 'none';
       appScreen.style.display = 'block';
-      hideSpinner(); // 👈 Oculta el spinner
   
-      processSingleFrame();
-    });
+      // Fuerza al primer frame (tiempo 0)
+      video.currentTime = 0;
+  
+      // Espera al seek para asegurar que el frame está visible
+      video.addEventListener('seeked', () => {
+        requestAnimationFrame(() => {
+            hideSpinner();
+            processSingleFrame();
+          });
+      }, { once: true });
+    }, { once: true });
   }
+  
   
   
 
@@ -124,12 +136,21 @@ async function processFrameLoop() {
 }
 
 async function processSingleFrame() {
-  const poses = await detector.estimatePoses(video);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (poses.length > 0 && poses[0].keypoints) {
-    drawKeypoints(poses[0].keypoints);
+    const poses = await detector.estimatePoses(video);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+    if (poses.length > 0 && poses[0].keypoints) {
+      // Mostrar lista, ocultar banner
+      angleList.classList.remove('hidden');
+      noPersonBanner.classList.add('hidden');
+      drawKeypoints(poses[0].keypoints);
+    } else {
+      // No hay persona → ocultar lista, mostrar banner
+      angleList.classList.add('hidden');
+      noPersonBanner.classList.remove('hidden');
+    }
   }
-}
+  
 
 // Dibujo
 const keypointsBySide = {
@@ -239,8 +260,6 @@ function getKeypointByName(keypoints, name) {
 
 
 //Lista de ángulos
-const angleList = document.getElementById('angleList');
-
 function updateAngleList(angleData) {
   angleList.innerHTML = angleData.map(({ joint, angle }) =>
     `<div>${joint}: ${Math.round(angle)}°</div>`

@@ -126,14 +126,34 @@ html, body {
     position: absolute;
     bottom: 20px;
     right: 10px;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.65);
     color: white;
-    font-size: 14px;
-    padding: 10px;
+    font-size: 1.1rem;
+    padding: 12px;
     border-radius: 8px;
-    max-width: 40vw;
+    width: 160px;
+    height: 150px;
     z-index: 10;
     font-family: monospace;
-    line-height: 1.4;
+    line-height: 1.6;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  
+  
+  #noPersonBanner {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #e53935;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    z-index: 20;
+    font-size: 1rem;
+    text-align: center;
+    box-shadow: 0 0 8px rgba(0,0,0,0.5);
   }
   
