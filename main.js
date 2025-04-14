@@ -14,6 +14,8 @@ let detector;
 let frameLoopTimeout = null;
 const FRAME_INTERVAL = 100; // ms (~10 FPS)
 
+const DETECTION_THRESHOLD = 0.3;
+
 //Spinner
 const loadingSpinner = document.getElementById('loadingSpinner');
 
@@ -46,7 +48,7 @@ async function loadModel() {
     poseDetection.SupportedModels.MoveNet,
     {
       modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
-      enableSmoothing: true
+      enableSmoothing: true,
     }
   );
   console.log('[INFO] Model loaded successfully!');
@@ -186,6 +188,8 @@ const skeletonBySide = {
 };
 
 function drawKeypoints(keypoints) {
+    //console.log(keypoints);
+
     const side = sideSelect.value;
     const prefix = side === 'right' ? 'right_' : 'left_';
     currentAngles = [];
@@ -193,7 +197,8 @@ function drawKeypoints(keypoints) {
     const allowedNames = new Set(keypointsBySide[side]);
   
     keypoints.forEach(kp => {
-      if (kp.score > 0.5 && allowedNames.has(kp.name)) {
+      if (kp.score > DETECTION_THRESHOLD && allowedNames.has(kp.name)) {
+        //console.log(kp.name, kp.score);
         ctx.beginPath();
         ctx.arc(kp.x, kp.y, 5, 0, 2 * Math.PI);
         ctx.fillStyle = 'red';
@@ -255,7 +260,7 @@ function drawAngleBetween(keypoints, a, b, c, label) {
 
 
 function getKeypointByName(keypoints, name) {
-  return keypoints.find(kp => kp.name === name && kp.score > 0.5);
+  return keypoints.find(kp => kp.name === name && kp.score > DETECTION_THRESHOLD);
 }
 
 
