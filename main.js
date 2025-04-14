@@ -10,6 +10,7 @@ const angleList = document.getElementById('angleList');
 const noPersonBanner = document.getElementById('noPersonBanner');
 
 let playing = false;
+let usingCamera = false;
 let detector;
 let frameLoopTimeout = null;
 const FRAME_INTERVAL = 100; // ms (~10 FPS)
@@ -40,6 +41,48 @@ document.getElementById('btnLoadVideo').addEventListener('click', () => {
 });
 
 fileInput.addEventListener('change', handleVideoUpload);
+
+
+document.getElementById('btnUseCamera').addEventListener('click', async () => {
+    console.log('[INFO] Activando cámara...');
+
+    usingCamera = true;
+
+    // Ocultar controles que no aplican en modo cámara
+    btnNext.style.display = 'none';
+    btnPrev.style.display = 'none';
+    btnPlayPause.style.display = 'none';
+
+    showSpinner();
+  
+    homeScreen.style.display = 'none';
+    appScreen.style.display = 'block';
+  
+    await loadModel();
+  
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+        audio: false
+      });
+  
+      video.srcObject = stream;
+  
+      video.addEventListener('loadeddata', () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+  
+        hideSpinner();
+        video.play();
+        processCameraFrameLoop(); // 👈 detección en tiempo real
+      }, { once: true });
+    } catch (err) {
+      alert('Error al acceder a la cámara: ' + err.message);
+      hideSpinner();
+      homeScreen.style.display = 'flex';
+    }
+  });
+  
 
 // Modelo de pose
 async function loadModel() {
@@ -281,3 +324,25 @@ function updateAngleList(angleData) {
     `<div>${joint}: ${Math.round(angle)}°</div>`
   ).join('');
 }
+
+
+
+// En directo
+async function processCameraFrameLoop() {
+    if (!usingCamera) return;
+  
+    const poses = await detector.estimatePoses(video);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+    if (poses.length > 0 && poses[0].keypoints) {
+      angleList.classList.remove('hidden');
+      noPersonBanner.classList.add('hidden');
+      drawKeypoints(poses[0].keypoints);
+    } else {
+      angleList.classList.add('hidden');
+      noPersonBanner.classList.remove('hidden');
+    }
+  
+    requestAnimationFrame(processCameraFrameLoop);
+  }
+  
