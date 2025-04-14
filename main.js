@@ -42,38 +42,55 @@ document.getElementById('btnLoadVideo').addEventListener('click', () => {
 
 fileInput.addEventListener('change', handleVideoUpload);
 
-async function populateCameraSelect() {
+async function getAvailableCameras() {
     const devices = await navigator.mediaDevices.enumerateDevices();
-    const cameras = devices.filter(device => device.kind === 'videoinput');
-    const select = document.getElementById('cameraSelect');
-  
-    select.innerHTML = ''; // limpia si ya tenía opciones
-  
-    cameras.forEach((camera, index) => {
-      const label = camera.label || `Camera ${index + 1}`;
-      const option = document.createElement('option');
-      option.value = camera.deviceId;
-      option.textContent = label.includes('back') || label.includes('rear') ? '📷 Rear camera' :
-                           label.includes('front') ? '🤳 Front camera' :
-                           label;
-      select.appendChild(option);
-    });
-  
-    // Muestra el selector si hay más de una
-    if (cameras.length > 0) {
-      select.classList.remove('hidden');
-    } else {
-      select.classList.add('hidden');
-    }
-  
-    return cameras;
+    return devices.filter(device => device.kind === 'videoinput');
   }
   
+
+  async function startCameraWithFacingMode(facingMode) {
+    usingCamera = true;
+    showSpinner();
+  
+    homeScreen.style.display = 'none';
+    appScreen.style.display = 'block';
+  
+    await loadModel();
+  
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode,
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        },
+        audio: false
+      });
+  
+      video.srcObject = stream;
+  
+      video.addEventListener('loadeddata', () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+  
+        hideSpinner();
+        video.play();
+        processCameraFrameLoop();
+      }, { once: true });
+  
+    } catch (err) {
+      alert('Error al acceder a la cámara: ' + err.message);
+      hideSpinner();
+      homeScreen.style.display = 'flex';
+    }
+  }
   
 
+  const cameraMenu = document.getElementById('cameraMenu');
+
   document.getElementById('btnUseCamera').addEventListener('click', async () => {
-    // ⚠️ Esto fuerza al navegador a desbloquear los nombres de las cámaras
     try {
+      // Obligatorio para desbloquear nombres de cámara
       const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
       tempStream.getTracks().forEach(track => track.stop());
     } catch (err) {
@@ -81,20 +98,17 @@ async function populateCameraSelect() {
       return;
     }
   
-    const cameras = await populateCameraSelect();
+    const cameras = await getAvailableCameras();
   
-    if (cameras.length === 1) {
-      // Solo una cámara, usar directamente
-      startCameraWithDeviceId(cameras[0].deviceId);
+    if (cameras.length <= 1) {
+      // Solo una cámara
+      startCameraWithFacingMode('user');
     } else {
-      // Mostrar selector visual si hay más
-      document.getElementById('cameraSelect').classList.remove('hidden');
-      document.getElementById('cameraSelect').addEventListener('change', (e) => {
-        startCameraWithDeviceId(e.target.value);
-        e.target.classList.add('hidden'); // ocultar el selector tras elección
-      }, { once: true });
+      // Mostrar menú personalizado
+      cameraMenu.classList.remove('hidden');
     }
   });
+  
   
   async function startCameraWithDeviceId(deviceId) {
     usingCamera = true;
@@ -132,6 +146,17 @@ async function populateCameraSelect() {
       homeScreen.style.display = 'flex';
     }
   }
+  
+
+  document.getElementById('btnFrontCamera').addEventListener('click', () => {
+    cameraMenu.classList.add('hidden');
+    startCameraWithFacingMode('user');
+  });
+  
+  document.getElementById('btnRearCamera').addEventListener('click', () => {
+    cameraMenu.classList.add('hidden');
+    startCameraWithFacingMode({ exact: 'environment' });
+  });
   
   
   
