@@ -212,3 +212,21 @@ html, body {
   
 
 
+  @media (max-width: 768px) {
+    body {
+      font-size: 14px;
+    }
+  
+    .play-controls button,
+    .toggle-group .toggle,
+    #angleList {
+      font-size: 0.9rem;
+      padding: 4px 8px;
+    }
+  
+    #angleList {
+      width: 130px;
+      height: 120px;
+    }
+  }
+  

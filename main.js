@@ -42,17 +42,14 @@ document.getElementById('btnLoadVideo').addEventListener('click', () => {
 
 fileInput.addEventListener('change', handleVideoUpload);
 
+async function getAvailableCameras() {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    return devices.filter(device => device.kind === 'videoinput');
+  }
+  
 
-document.getElementById('btnUseCamera').addEventListener('click', async () => {
-    console.log('[INFO] Activando cámara...');
-
+  document.getElementById('btnUseCamera').addEventListener('click', async () => {
     usingCamera = true;
-
-    // Ocultar controles que no aplican en modo cámara
-    btnNext.style.display = 'none';
-    btnPrev.style.display = 'none';
-    btnPlayPause.style.display = 'none';
-
     showSpinner();
   
     homeScreen.style.display = 'none';
@@ -60,9 +57,22 @@ document.getElementById('btnUseCamera').addEventListener('click', async () => {
   
     await loadModel();
   
+    const cameras = await getAvailableCameras();
+  
+    let facingMode = 'user'; // default: front camera
+  
+    if (cameras.length > 1) {
+      const useRearCamera = confirm("Use rear camera? Press 'Cancel' for front camera.");
+      facingMode = useRearCamera ? { exact: 'environment' } : 'user';
+    }
+  
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+        video: {
+          facingMode,
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        },
         audio: false
       });
   
@@ -74,14 +84,16 @@ document.getElementById('btnUseCamera').addEventListener('click', async () => {
   
         hideSpinner();
         video.play();
-        processCameraFrameLoop(); // 👈 detección en tiempo real
+        processCameraFrameLoop();
       }, { once: true });
+  
     } catch (err) {
-      alert('Error al acceder a la cámara: ' + err.message);
+      alert('Error accessing camera: ' + err.message);
       hideSpinner();
       homeScreen.style.display = 'flex';
     }
   });
+  
   
 
 // Modelo de pose
