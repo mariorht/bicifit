@@ -72,6 +72,31 @@ async function populateCameraSelect() {
   
 
   document.getElementById('btnUseCamera').addEventListener('click', async () => {
+    // ⚠️ Esto fuerza al navegador a desbloquear los nombres de las cámaras
+    try {
+      const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      tempStream.getTracks().forEach(track => track.stop());
+    } catch (err) {
+      alert('Necesitas conceder acceso a la cámara para continuar.');
+      return;
+    }
+  
+    const cameras = await populateCameraSelect();
+  
+    if (cameras.length === 1) {
+      // Solo una cámara, usar directamente
+      startCameraWithDeviceId(cameras[0].deviceId);
+    } else {
+      // Mostrar selector visual si hay más
+      document.getElementById('cameraSelect').classList.remove('hidden');
+      document.getElementById('cameraSelect').addEventListener('change', (e) => {
+        startCameraWithDeviceId(e.target.value);
+        e.target.classList.add('hidden'); // ocultar el selector tras elección
+      }, { once: true });
+    }
+  });
+  
+  async function startCameraWithDeviceId(deviceId) {
     usingCamera = true;
     showSpinner();
   
@@ -80,14 +105,10 @@ async function populateCameraSelect() {
   
     await loadModel();
   
-    const cameras = await populateCameraSelect();
-  
-    const selectedDeviceId = document.getElementById('cameraSelect').value;
-  
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          deviceId: { exact: selectedDeviceId },
+          deviceId: { exact: deviceId },
           width: { ideal: 640 },
           height: { ideal: 480 }
         },
@@ -106,11 +127,11 @@ async function populateCameraSelect() {
       }, { once: true });
   
     } catch (err) {
-      alert('Error accessing camera: ' + err.message);
+      alert('Error al acceder a la cámara: ' + err.message);
       hideSpinner();
       homeScreen.style.display = 'flex';
     }
-  });
+  }
   
   
   
