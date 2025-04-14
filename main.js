@@ -50,6 +50,13 @@ async function getAvailableCameras() {
 
   async function startCameraWithFacingMode(facingMode) {
     usingCamera = true;
+
+    // Oculta los controles de reproducción en modo cámara
+    btnPlayPause.style.display = 'none';
+    btnNext.style.display = 'none';
+    btnPrev.style.display = 'none';
+
+
     showSpinner();
   
     homeScreen.style.display = 'none';
@@ -177,6 +184,11 @@ async function loadModel() {
 async function handleVideoUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
+
+    btnPlayPause.style.display = '';
+    btnNext.style.display = '';
+    btnPrev.style.display = '';
+
   
     showSpinner();
   
