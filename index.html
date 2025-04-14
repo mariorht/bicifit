@@ -28,16 +28,18 @@
       <video id="video" muted playsinline loop></video>
       <canvas id="overlay"></canvas>
 
-      <select id="sideSelect">
-        <option value="right">Derecha</option>
-        <option value="left">Izquierda</option>
-      </select>
-
-      <div id="controls">
-        <button id="btnPlayPause">▶️</button>
-        <button id="btnPrev">⏮️</button>
-        <button id="btnNext">⏭️</button>
+      <div id="bottomBar">
+        <div class="toggle-group">
+          <button data-side="left" class="toggle">👈 Izq</button>
+          <button data-side="right" class="toggle active">Der 👉</button>
+        </div>
+        <div class="play-controls">
+          <button id="btnPrev">⏮️</button>
+          <button id="btnPlayPause">▶️</button>
+          <button id="btnNext">⏭️</button>
+        </div>
       </div>
+      
 
       <div id="angleList">
         <!-- contenido dinámico -->

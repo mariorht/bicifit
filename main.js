@@ -32,7 +32,7 @@ function hideSpinner() {
 const btnPlayPause = document.getElementById('btnPlayPause');
 const btnNext = document.getElementById('btnNext');
 const btnPrev = document.getElementById('btnPrev');
-const sideSelect = document.getElementById('sideSelect');
+let currentSide = 'right';
 
 // Pantalla inicial
 document.getElementById('btnLoadVideo').addEventListener('click', () => {
@@ -91,6 +91,17 @@ async function handleVideoUpload(event) {
   
 
 // Botones
+document.querySelectorAll('.toggle-group .toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.toggle-group .toggle').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentSide = btn.dataset.side;
+      processSingleFrame();
+
+    });
+  });
+
+  
 btnPlayPause.addEventListener('click', () => {
     playing = !playing;
   
@@ -190,7 +201,7 @@ const skeletonBySide = {
 function drawKeypoints(keypoints) {
     //console.log(keypoints);
 
-    const side = sideSelect.value;
+    const side = currentSide;
     const prefix = side === 'right' ? 'right_' : 'left_';
     currentAngles = [];
   
