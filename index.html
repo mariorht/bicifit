@@ -1,34 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Bike Fitting App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bike Fit</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <input type="file" id="fileInput" accept="video/*">
 
-  <label>
-    Orientación:
-    <select id="sideSelect">
-      <option value="right">Mirando a la derecha</option>
-      <option value="left">Mirando a la izquierda</option>
-    </select>
-  </label>
-
-  <div id="controls">
-    <button id="btnPlay">▶️ Play</button>
-    <button id="btnPause">⏸️ Pause</button>
-    <button id="btnPrev">⏮️ Frame -</button>
-    <button id="btnNext">⏭️ Frame +</button>
-  </div>
-  
-  
-  <div id="container">
-    <video id="video" loop muted playsinline></video>
-    <canvas id="overlay"></canvas>
+  <!-- Pantalla inicial -->
+  <div id="home" class="screen" style="display: flex">
+    <button id="btnLoadVideo">📹 Cargar vídeo</button>
+    <button id="btnUseCamera" disabled>📷 Usar cámara</button>
+    <input type="file" id="fileInput" accept="video/*" style="display: none">
   </div>
 
+  <!-- Cargando -->
+  <div id="loadingSpinner" class="spinner hidden">
+    <div class="loader"></div>
+  </div>
+ 
+  
+
+  <!-- Pantalla de análisis -->
+  <div id="app" class="screen">
+    <div id="videoContainer">
+      <video id="video" muted playsinline loop></video>
+      <canvas id="overlay"></canvas>
+
+      <select id="sideSelect">
+        <option value="right">Derecha</option>
+        <option value="left">Izquierda</option>
+      </select>
+
+      <div id="controls">
+        <button id="btnPlayPause">▶️</button>
+        <button id="btnPrev">⏮️</button>
+        <button id="btnNext">⏭️</button>
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
   <script src="main.js"></script>
