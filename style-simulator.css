@@ -1,0 +1,8 @@
+body   {font-family: system-ui, sans-serif; margin:0; padding:1.5rem;}
+h1     {margin:0 0 1rem;}
+.grid  {display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+        gap:1rem; max-width:800px; margin-bottom:1.5rem;}
+label  {font-weight:600; display:block; margin-bottom:.25rem;}
+input  {width:100%; padding:.25rem .5rem; border:1px solid #ccc; border-radius:4px;}
+canvas {border:1px solid #ccc; border-radius:8px; box-shadow:0 0 8px #0002;
+        max-width:100%; height:auto;}
