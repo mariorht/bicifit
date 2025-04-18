@@ -10,15 +10,24 @@
     <h1>Bike Geometry (playground)</h1>
   
     <div class="grid">
-        <div><label>Stack (mm)<input type="number" id="stack"        value="500"></label></div>
-        <div><label>Reach (mm)<input type="number" id="reach"        value="380"></label></div>
-        <div><label>Seat Tube ST (mm)<input type="number" id="seatTube"     value="500.2"></label></div>
+        <div><label>Stack (mm)<input type="number" id="stack" value="500"></label></div>
+        <div><label>Reach (mm)<input type="number" id="reach" value="380"></label></div>
+        <div><label>Seat Tube ST (mm)<input type="number" id="seatTube" value="440"></label></div>
         <div><label>Altura sillín (mm)<input type="number" id="saddleHeight" value="700"></label></div>
-        <div><label>CA ° (seat‑tube)<input type="number" id="ca"     value="74"></label></div>
-        <div><label>HA ° (head‑tube)<input type="number" id="ha"     value="72"></label></div>
+        <div><label>CA ° (seat‑tube)<input type="number" id="ca" value="74"></label></div>
+        <div><label>HA ° (head‑tube)<input type="number" id="ha" value="72"></label></div>
+
+        <div><label>Espaciadores (mm)<input type="number" id="barHeight" value="50"></label></div>
+        <div><label>Ancho hood → drop (mm)<input type="number" id="barLength" value="3"></label></div>
+        <div><label>Stem (mm)<input type="number" id="stemLength" value="90"></label></div>
+          </div>
+          
       </div>
   
     <canvas id="preview" width="900" height="600"></canvas>
+    <button id="togglePedals">Girar pedales</button>
+    <div id="calc"></div>
+
   
     <script src="bike-fit.js"></script>
   </body>
