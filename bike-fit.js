@@ -3,6 +3,7 @@ const RC        = 410;   // chainstay
 const HT_LEN    = 90;    // head‑tube
 const WHEEL_R   = 335;   // radio rueda
 const SPACER_MM = 5;     // espaciador estándar
+const CRANK_LEN = 170;   // longitud biela (mm)
 const s         = 0.3;   // px / mm (zoom)
 
 /* ===== BINDINGS ===== */
@@ -20,6 +21,22 @@ ids.forEach(id=>{
 const canvas = document.getElementById("preview");
 const ctx    = canvas.getContext("2d");
 const out    = document.getElementById("calc");
+
+/* ===== PEDALES ===== */
+let crankAngle = 0;          // ángulo actual (rad)
+let spinning   = false;      // flag animación
+document.getElementById("togglePedals").addEventListener("click",()=>{
+  spinning = !spinning;
+  if (spinning) requestAnimationFrame(animateCranks);
+});
+
+function animateCranks(time){
+  if (spinning){
+    crankAngle += 0.05;              // velocidad (rad/frame)
+    draw();
+    requestAnimationFrame(animateCranks);
+  }
+}
 
 /* helpers */
 const rad = d => d*Math.PI/180;
@@ -74,24 +91,23 @@ function draw(){
 
   /* secciones: hood (40 mm), reach (user), drop (110 mm), tail (20 mm atrás) */
   const hood  = 40*s;
-  const reach = state.barLength*s;          // avance adicional recto
+  const reach = state.barLength*s;
   const drop  = 110*s;
 
   const hoodEnd  = { x: clamp.x + hood,        y: clamp.y };
   const curveEnd = { x: hoodEnd.x + reach,     y: hoodEnd.y + drop };
   const tailEnd  = { x: curveEnd.x - 20*s,     y: curveEnd.y };
-  const spacerTop = {
-    x: headTop.x - spacerShift * uHT.x * s,
-    y: headTop.y - spacerShift * uHT.y * s
+
+  /* potencia en dos tramos */
+  const spacerTop = {                          // fin de espaciadores
+    x: headTop.x - spacerShift*uHT.x*s,
+    y: headTop.y - spacerShift*uHT.y*s
   };
-  /* potencia */
-  line(headTop, spacerTop);
-  line(spacerTop, clamp);
+  line(headTop, spacerTop);                    // tramo sobre steerer
+  line(spacerTop, clamp);                      // tramo horizontal
 
-  /* tramo hood */
+  /* manillar */
   line(clamp, hoodEnd);
-
-  /* curva (cuadrática) */
   ctx.beginPath();
   ctx.moveTo(hoodEnd.x, hoodEnd.y);
   ctx.quadraticCurveTo(
@@ -99,11 +115,8 @@ function draw(){
     curveEnd.x, curveEnd.y
   );
   ctx.stroke();
-
-  /* cola */
   line(curveEnd, tailEnd);
 
-  /* nodo & leyenda */
   dot(clamp);
   label("Handlebar",{x:clamp.x+8,y:clamp.y-8});
 
@@ -118,6 +131,21 @@ function draw(){
   line(seatTop, saddle);      // tija
   line({x:saddle.x-15,y:saddle.y},{x:saddle.x+15,y:saddle.y}); // sillín
   [bb,rearAxle,frontAxle,seatTop,headTop,headBot,saddle].forEach(dot);
+
+  /* ---------- PEDALES ---------- */
+  const crankPx = CRANK_LEN * s;
+  const pedal1 = {
+    x: bb.x + crankPx * Math.cos(crankAngle),
+    y: bb.y + crankPx * Math.sin(crankAngle)
+  };
+  const pedal2 = {
+    x: bb.x + crankPx * Math.cos(crankAngle + Math.PI),
+    y: bb.y + crankPx * Math.sin(crankAngle + Math.PI)
+  };
+  line(bb, pedal1);
+  line(bb, pedal2);
+  dot(pedal1);
+  dot(pedal2);
 
   /* ruedas guía */
   ctx.setLineDash([4,6]);
@@ -136,4 +164,4 @@ function draw(){
     `Stem (user): ${state.stemLength} mm  —  Stem (real): ${stemLenReal} mm  |  Angle: ${stemAngle}°  |  Spacers: ${spacers}`;
 }
 
-draw();
+draw();        // primer render
