@@ -11,8 +11,12 @@ const ids = [
 const state = {};
 
 const crankSlider = document.getElementById('crankSlider');
-state.crankAngle  = +crankSlider.value;
+state.crankAngle  = crankSlider.value;
 crankSlider.value = state.crankAngle;
+
+// Detener automática al empezar a arrastrar
+crankSlider.addEventListener('mousedown', () => { spinning = false; });
+crankSlider.addEventListener('touchstart', () => { spinning = false; });
 
 
 ids.forEach(id => {
@@ -55,13 +59,11 @@ function animate() {
 }
 
 
-document.getElementById('crankSlider')
-  .addEventListener('input', e => {
-  // Incrementar ángulo y reflejarlo en el slider
-  state.crankAngle = (state.crankAngle + 0.05) % (2 * Math.PI);
-  crankSlider.value = state.crankAngle;
+crankSlider.addEventListener('input', e => {
+  spinning = false;
+  state.crankAngle = +e.target.value;
   draw();
-  });
+});
 
 
 function rad(d) { return d * Math.PI / 180; }
