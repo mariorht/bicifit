@@ -6,7 +6,7 @@ const ids = [
   'RC','HT_LEN','WHEEL_R','SPACER_MM',
   'CRANK_LEN',
   'THIGH_L','SHIN_L','TORSO_L','upperArm','lowerArm','elbowAngle','HEAD_R',
-  's'
+  'footLength','cleatOffset','s'
 ];
 const state = {};
 ids.forEach(id => {
@@ -64,7 +64,9 @@ function draw() {
   const {
     RC, HT_LEN, WHEEL_R, SPACER_MM, CRANK_LEN,
     THIGH_L, SHIN_L, TORSO_L,
-    upperArm, lowerArm, HEAD_R, s
+    upperArm, lowerArm, HEAD_R,
+    footLength, cleatOffset,
+    s
   } = state;
   const ca = rad(state.ca), ha = rad(state.ha);
   const manualAngleRad = rad(state.elbowAngle);
@@ -75,7 +77,7 @@ function draw() {
   ctx.fillStyle   = '#1976d2';
   ctx.lineWidth   = 2;
 
-  // puntos base
+  // puntos base de la bici...
   const bb        = { x: canvas.width/2, y: canvas.height - 120 };
   const rearAxle  = { x: bb.x - RC*s, y: bb.y };
   const seatTop   = {
@@ -94,7 +96,7 @@ function draw() {
   const forkPx    = (bb.y - headBot.y)/Math.sin(ha);
   const frontAxle = { x: headBot.x + forkPx*Math.cos(ha), y: bb.y };
 
-  // — Manillar y stem —
+  // manillar y stem...
   const uHT       = { x: Math.cos(ha), y: Math.sin(ha) };
   const spacerTop = {
     x: headTop.x - state.barHeight*uHT.x*s,
@@ -191,66 +193,69 @@ function draw() {
     y: bb.y + crankPx*Math.sin(crankAngle)
   };
   ctx.lineWidth = isHighlighted('CRANK_LEN') ? 4 : 2;
+  ctx.strokeStyle = '#1976d2';
   line(bb, pedalR);
   dot(pedalR);
 
-  // — Ciclista —
+  // — Ciclista — en rojo
   ctx.strokeStyle = '#d32f2f';
   ctx.fillStyle   = '#d32f2f';
 
-  // 11) Thigh (THIGH_L)
-  ctx.lineWidth = isHighlighted('THIGH_L') ? 4 : 2;
-  let knee = { x:(saddle.x+pedalR.x)/2, y:(saddle.y+pedalR.y)/2 };
-  const kints = circleIntersections(saddle, THIGH_L*s, pedalR, SHIN_L*s);
-  if (kints) knee = kints[0].x > saddle.x ? kints[0] : kints[1];
-  line(saddle, knee);
+    // Cala en el pedal
+    const cleat = { x: pedalR.x, y: pedalR.y };
+    dot(cleat);
+    // Talón atrás de la cala
+    const heel = { x: cleat.x - cleatOffset*s, y: cleat.y };
+    dot(heel);
+    // Rodilla: intersección muslo–espinilla
+    let knee = { x:(saddle.x+heel.x)/2, y:(saddle.y+heel.y)/2 };
+    const kints2 = circleIntersections(saddle, THIGH_L*s, heel, SHIN_L*s);
+    if(kints2) knee = kints2.find(p=>p.x > saddle.x) || kints2[0];
+    ctx.lineWidth = isHighlighted('THIGH_L')?4:2; line(saddle, knee);
+    ctx.lineWidth = isHighlighted('SHIN_L')?4:2; line(knee, heel);
 
-  // 12) Shin (SHIN_L)
-  ctx.lineWidth = isHighlighted('SHIN_L') ? 4 : 2;
-  line(knee, pedalR);
-  dot(knee);
+    // Ángulo de rodilla (arco corto)
+    {
+      const v1 = { x: saddle.x - knee.x, y: saddle.y - knee.y };
+      const v2 = { x: heel.x  - knee.x, y: heel.y  - knee.y };
+      const dp = v1.x * v2.x + v1.y * v2.y;
+      const angle = Math.acos(Math.min(1, Math.max(-1,
+        dp / (Math.hypot(v1.x, v1.y) * Math.hypot(v2.x, v2.y)))
+      ));
+      const r = 50 * s;
+      const a1 = Math.atan2(v1.y, v1.x), a2 = Math.atan2(v2.y, v2.x);
+      // calcular delta y arco corto
+      let delta = a2 - a1;
+      if (delta < 0) delta += 2 * Math.PI;
+      const anticlock = delta > Math.PI;
+      // dibujar arco corto
+      ctx.beginPath();
+      ctx.arc(knee.x, knee.y, r, a1, a2, anticlock);
+      ctx.stroke();
+      // etiqueta
+      ctx.fillStyle = '#000';
+      ctx.font = '12px sans-serif';
+      let mid;
+      if (!anticlock) {
+        mid = a1 + delta / 2;
+      } else {
+        mid = a1 - (2 * Math.PI - delta) / 2;
+      }
+      ctx.fillText(
+        `${Math.round(angle * 180/Math.PI)}°`,
+        knee.x + (r + 30) * Math.cos(mid),
+        knee.y + (r + 15) * Math.sin(mid)
+      );
+    }
 
-// — ÁNGULO RODILLA — (arco por el lado corto)
-{
-  const v1 = { x: saddle.x - knee.x, y: saddle.y - knee.y };
-  const v2 = { x: pedalR.x - knee.x, y: pedalR.y - knee.y };
-  const dp = v1.x*v2.x + v1.y*v2.y;
-  const a  = Math.acos(Math.min(1, Math.max(-1,
-    dp/(Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y)))
-  ));
-  const deg = Math.round(a * 180/Math.PI);
-  const r   = 50 * s;
-  const ang1 = Math.atan2(v1.y, v1.x);
-  const ang2 = Math.atan2(v2.y, v2.x);
+  
+    // Pie: línea talón→punta
+    ctx.lineWidth = isHighlighted('footLength')?4:2;
+    const toe = { x: heel.x + footLength*s, y: heel.y };
+    line(heel, toe);
+  
 
-  // Calcular si debemos dibujar en sentido antihorario para el arco corto
-  let delta = ang2 - ang1;
-  if (delta < 0) delta += 2*Math.PI;
-  const anticlock = delta > Math.PI;
-
-  // Dibujar arco menor
-  ctx.beginPath();
-  ctx.arc(knee.x, knee.y, r, ang1, ang2, anticlock);
-  ctx.stroke();
-
-  // Calcular punto medio del arco para el texto
-  let mid;
-  if (!anticlock) {
-    mid = ang1 + delta/2;
-  } else {
-    mid = ang1 - (2*Math.PI - delta)/2;
-  }
-
-  // Etiqueta del ángulo
-  ctx.fillStyle = '#000';
-  ctx.font      = '12px sans-serif';
-  ctx.fillText(
-    `${deg}°`,
-    knee.x + (r + 30) * Math.cos(mid),
-    knee.y + (r + 10) * Math.sin(mid)
-  );
-}
-
+  // resto del ciclista (torso, brazos, cabeza) idéntico al original...
   // 13) Torso y hombro (TORSO_L)
   const L_torso = TORSO_L*s, L1 = upperArm*s, L2 = lowerArm*s;
   const D       = Math.sqrt(L1*L1 + L2*L2 - 2*L1*L2*Math.cos(manualAngleRad));
@@ -267,7 +272,7 @@ function draw() {
     const dp = v1.x*v2.x + v1.y*v2.y;
     const a  = Math.acos(Math.min(1, Math.max(-1, dp/(Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y)))));
     const deg= Math.round(a * 180/Math.PI);
-    const r  = 50 * s;
+    const r  = 75 * s;
     const ang1 = Math.atan2(v1.y, v1.x), ang2 = Math.atan2(v2.y, v2.x);
     ctx.beginPath(); ctx.arc(saddle.x, saddle.y, r, ang1, ang2); ctx.stroke();
     let delta = ang2 - ang1; if (delta<0) delta+=2*Math.PI;
@@ -313,18 +318,6 @@ function draw() {
     ctx.arc(shoulder.x, shoulder.y - HEAD_R*s, HEAD_R*s, 0,2*Math.PI);
   ctx.stroke();
 
-  // cálculo stem & espaciadores
-  ctx.strokeStyle = '#1976d2';
-  ctx.fillStyle   = '#000';
-  ctx.font        = '14px sans-serif';
-  const dx_mm    = (clamp.x - headTop.x)/s;
-  const dy_mm    = (headTop.y - clamp.y)/s;
-  const stemReal = Math.round(Math.hypot(dx_mm, dy_mm));
-  const stemAng  = Math.round(Math.atan2(dy_mm, dx_mm)*180/Math.PI);
-  const spacers  = Math.ceil(Math.max(0, dy_mm)/SPACER_MM);
-  out.textContent =
-    `Stem (user): ${state.stemLength} mm — Stem (real): ${stemReal} mm | `+
-    `Angle: ${stemAng}° | Spacers: ${spacers}`;
 }
 
 draw();
