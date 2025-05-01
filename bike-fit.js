@@ -12,7 +12,10 @@ const state = {};
 ids.forEach(id => {
   const el = document.getElementById(id);
   state[id] = +el.value;
-  el.addEventListener('input', e => { state[id] = +e.target.value || 0; draw(); });
+  el.addEventListener('input', e => {
+    state[id] = +e.target.value || 0;
+    draw();
+  });
 });
 
 // hover-key para resaltar
@@ -45,19 +48,19 @@ function animate() {
 
 function rad(d) { return d * Math.PI / 180; }
 function line(a,b){ ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
-function dot(p)   { ctx.beginPath(); ctx.arc(p.x,p.y,4,0,2*Math.PI); ctx.fill(); }
+function dot(p){ ctx.beginPath(); ctx.arc(p.x,p.y,4,0,2*Math.PI); ctx.fill(); }
 function circleIntersections(A,rA,B,rB){
   const dx=B.x-A.x, dy=B.y-A.y, d=Math.hypot(dx,dy);
-  if (d>rA+rB||d<Math.abs(rA-rB)||d===0) return null;
-  const a=(rA*rA - rB*rB + d*d)/(2*d);
-  const h=Math.sqrt(Math.max(0, rA*rA - a*a));
-  const xm=A.x+a*dx/d, ym=A.y+a*dy/d;
-  const rx=-dy*(h/d), ry=dx*(h/d);
+  if(d>rA+rB||d<Math.abs(rA-rB)||d===0) return null;
+  const a=(rA*rA - rB*rB + d*d)/(2*d),
+        h=Math.sqrt(Math.max(0, rA*rA - a*a)),
+        xm=A.x + a*dx/d, ym=A.y + a*dy/d,
+        rx=-dy*(h/d), ry= dx*(h/d);
   return [{x:xm+rx,y:ym+ry},{x:xm-rx,y:ym-ry}];
 }
 
 function draw() {
-  // valores
+  // extraer valores
   const {
     RC, HT_LEN, WHEEL_R, SPACER_MM, CRANK_LEN,
     THIGH_L, SHIN_L, TORSO_L,
@@ -66,9 +69,11 @@ function draw() {
   const ca = rad(state.ca), ha = rad(state.ha);
   const manualAngleRad = rad(state.elbowAngle);
 
+  // limpiar
   ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.strokeStyle = '#1976d2';
   ctx.fillStyle   = '#1976d2';
+  ctx.lineWidth   = 2;
 
   // puntos base
   const bb        = { x: canvas.width/2, y: canvas.height - 120 };
@@ -135,37 +140,37 @@ function draw() {
   ctx.lineWidth = isHighlighted('RC') ? 4 : 2;
   line(rearAxle, bb);
 
-  // b) Down tube (reach/stack)
+  // b) Down tube (reach & stack)
   ctx.lineWidth = isHighlighted('reach','stack') ? 4 : 2;
   line(bb, headBot);
 
-  // c) Head tube (HT_LEN/ha)
+  // c) Head tube (HT_LEN & ha)
   ctx.lineWidth = isHighlighted('HT_LEN','ha') ? 4 : 2;
   line(headBot, headTop);
   dot(headBot);
 
-  // d) Top tube (reach/stack)
-  ctx.lineWidth = isHighlighted('reach','stack') ? 4 : 2;
-  line(headTop, seatTop);
-
-  // ** d) Fork **
-  ctx.lineWidth = isHighlighted('HT_LEN','ha') ? 4 : 2;  // mismo highlight que head-tube
+  // d) Fork
+  ctx.lineWidth = isHighlighted('HT_LEN','ha') ? 4 : 2;
   line(headBot, frontAxle);
   dot(frontAxle);
 
-  // e) Seat tube (seatTube/ca)
+  // e) Top tube (stack & reach)
+  ctx.lineWidth = isHighlighted('stack','reach') ? 4 : 2;
+  line(headTop, seatTop);
+
+  // f) Seat tube (seatTube & ca)
   ctx.lineWidth = isHighlighted('seatTube','ca') ? 4 : 2;
   line(seatTop, bb);
 
-  // f) Seat stay (no highlight)
+  // g) Seat stay
   ctx.lineWidth = 2;
   line(seatTop, rearAxle);
 
-  // g) Seatpost (saddleHeight)
+  // h) Seatpost (saddleHeight)
   ctx.lineWidth = isHighlighted('saddleHeight') ? 4 : 2;
   line(seatTop, saddle);
 
-  // h) Saddle
+  // i) Saddle
   ctx.lineWidth = 2;
   line({ x: saddle.x-15, y: saddle.y }, { x: saddle.x+15, y: saddle.y });
 
@@ -179,7 +184,7 @@ function draw() {
   ctx.beginPath(); ctx.arc(frontAxle.x, frontAxle.y, WHEEL_R*s, 0,2*Math.PI); ctx.stroke();
   ctx.setLineDash([]);
 
-  // — Cranks (CRANK_LEN) —
+  // — Cranks y pedales (CRANK_LEN) —
   const crankPx = CRANK_LEN*s;
   const pedalR  = {
     x: bb.x + crankPx*Math.cos(crankAngle),
@@ -189,7 +194,7 @@ function draw() {
   line(bb, pedalR);
   dot(pedalR);
 
-  // — Ciclista (rojo) —
+  // — Ciclista —
   ctx.strokeStyle = '#d32f2f';
   ctx.fillStyle   = '#d32f2f';
 
@@ -197,7 +202,7 @@ function draw() {
   ctx.lineWidth = isHighlighted('THIGH_L') ? 4 : 2;
   let knee = { x:(saddle.x+pedalR.x)/2, y:(saddle.y+pedalR.y)/2 };
   const kints = circleIntersections(saddle, THIGH_L*s, pedalR, SHIN_L*s);
-  if (kints) knee = kints[0].x> saddle.x ? kints[0] : kints[1];
+  if (kints) knee = kints[0].x > saddle.x ? kints[0] : kints[1];
   line(saddle, knee);
 
   // 12) Shin (SHIN_L)
@@ -205,15 +210,73 @@ function draw() {
   line(knee, pedalR);
   dot(knee);
 
-  // 13) Torso (TORSO_L)
+// — ÁNGULO RODILLA — (arco por el lado corto)
+{
+  const v1 = { x: saddle.x - knee.x, y: saddle.y - knee.y };
+  const v2 = { x: pedalR.x - knee.x, y: pedalR.y - knee.y };
+  const dp = v1.x*v2.x + v1.y*v2.y;
+  const a  = Math.acos(Math.min(1, Math.max(-1,
+    dp/(Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y)))
+  ));
+  const deg = Math.round(a * 180/Math.PI);
+  const r   = 50 * s;
+  const ang1 = Math.atan2(v1.y, v1.x);
+  const ang2 = Math.atan2(v2.y, v2.x);
+
+  // Calcular si debemos dibujar en sentido antihorario para el arco corto
+  let delta = ang2 - ang1;
+  if (delta < 0) delta += 2*Math.PI;
+  const anticlock = delta > Math.PI;
+
+  // Dibujar arco menor
+  ctx.beginPath();
+  ctx.arc(knee.x, knee.y, r, ang1, ang2, anticlock);
+  ctx.stroke();
+
+  // Calcular punto medio del arco para el texto
+  let mid;
+  if (!anticlock) {
+    mid = ang1 + delta/2;
+  } else {
+    mid = ang1 - (2*Math.PI - delta)/2;
+  }
+
+  // Etiqueta del ángulo
+  ctx.fillStyle = '#000';
+  ctx.font      = '12px sans-serif';
+  ctx.fillText(
+    `${deg}°`,
+    knee.x + (r + 30) * Math.cos(mid),
+    knee.y + (r + 10) * Math.sin(mid)
+  );
+}
+
+  // 13) Torso y hombro (TORSO_L)
   const L_torso = TORSO_L*s, L1 = upperArm*s, L2 = lowerArm*s;
   const D       = Math.sqrt(L1*L1 + L2*L2 - 2*L1*L2*Math.cos(manualAngleRad));
   let shoulder  = { x:(saddle.x+hoodEnd.x)/2, y:(saddle.y+hoodEnd.y)/2 };
   const shInts2 = circleIntersections(saddle, L_torso, hoodEnd, D);
-  if (shInts2) shoulder = shInts2[0].y<shInts2[1].y ? shInts2[0] : shInts2[1];
+  if (shInts2) shoulder = shInts2[0].y < shInts2[1].y ? shInts2[0] : shInts2[1];
   ctx.lineWidth = isHighlighted('TORSO_L') ? 4 : 2;
   line(saddle, shoulder);
-  dot(shoulder);
+
+  // — ÁNGULO CADERA (en saddle) —
+  {
+    const v1 = { x: shoulder.x - saddle.x, y: shoulder.y - saddle.y };
+    const v2 = { x: knee.x    - saddle.x, y: knee.y    - saddle.y };
+    const dp = v1.x*v2.x + v1.y*v2.y;
+    const a  = Math.acos(Math.min(1, Math.max(-1, dp/(Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y)))));
+    const deg= Math.round(a * 180/Math.PI);
+    const r  = 50 * s;
+    const ang1 = Math.atan2(v1.y, v1.x), ang2 = Math.atan2(v2.y, v2.x);
+    ctx.beginPath(); ctx.arc(saddle.x, saddle.y, r, ang1, ang2); ctx.stroke();
+    let delta = ang2 - ang1; if (delta<0) delta+=2*Math.PI;
+    const mid = ang1 + delta/2;
+    ctx.fillText(`${deg}°`,
+      saddle.x + (r+6)*Math.cos(mid),
+      saddle.y + (r+6)*Math.sin(mid)
+    );
+  }
 
   // 14) Upper arm (upperArm)
   ctx.lineWidth = isHighlighted('upperArm') ? 4 : 2;
@@ -225,22 +288,30 @@ function draw() {
   // 15) Lower arm (lowerArm)
   ctx.lineWidth = isHighlighted('lowerArm') ? 4 : 2;
   line(elbow, hoodEnd);
-  dot(elbow);
+
+  // — ÁNGULO CODO —
+  {
+    const v1 = { x: shoulder.x - elbow.x, y: shoulder.y - elbow.y };
+    const v2 = { x: hoodEnd.x   - elbow.x, y: hoodEnd.y   - elbow.y };
+    const dp = v1.x*v2.x + v1.y*v2.y;
+    const a  = Math.acos(Math.min(1, Math.max(-1, dp/(Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y)))));
+    const deg= Math.round(a * 180/Math.PI);
+    const r  = 50 * s;
+    const ang1 = Math.atan2(v1.y, v1.x), ang2 = Math.atan2(v2.y, v2.x);
+    ctx.beginPath(); ctx.arc(elbow.x, elbow.y, r, ang1, ang2); ctx.stroke();
+    let delta = ang2 - ang1; if (delta<0) delta+=2*Math.PI;
+    const mid = ang1 + delta/2;
+    ctx.fillText(`${deg}°`,
+      elbow.x + (r+6)*Math.cos(mid),
+      elbow.y + (r+6)*Math.sin(mid)
+    );
+  }
 
   // 16) Head (HEAD_R)
   ctx.lineWidth = isHighlighted('HEAD_R') ? 4 : 2;
   ctx.beginPath();
     ctx.arc(shoulder.x, shoulder.y - HEAD_R*s, HEAD_R*s, 0,2*Math.PI);
   ctx.stroke();
-
-  // 17) Elbow angle (elbowAngle)
-  ctx.lineWidth = isHighlighted('elbowAngle') ? 4 : 2;
-  const v1 = { x: shoulder.x - elbow.x, y: shoulder.y - elbow.y };
-  const v2 = { x: hoodEnd.x  - elbow.x,   y: hoodEnd.y  - elbow.y };
-  const dp = v1.x*v2.x + v1.y*v2.y;
-  const ang= Math.acos(Math.min(1, Math.max(-1, dp/(Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y)))));
-  const a1 = Math.atan2(v1.y, v1.x), a2 = Math.atan2(v2.y, v2.x);
-  ctx.beginPath(); ctx.arc(elbow.x, elbow.y, 20*s, a1, a2); ctx.stroke();
 
   // cálculo stem & espaciadores
   ctx.strokeStyle = '#1976d2';
