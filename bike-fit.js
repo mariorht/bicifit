@@ -9,6 +9,12 @@ const ids = [
   'footLength','cleatOffset','s'
 ];
 const state = {};
+
+const crankSlider = document.getElementById('crankSlider');
+state.crankAngle  = +crankSlider.value;
+crankSlider.value = state.crankAngle;
+
+
 ids.forEach(id => {
   const el = document.getElementById(id);
   state[id] = +el.value;
@@ -33,18 +39,30 @@ const canvas = document.getElementById('preview');
 const ctx    = canvas.getContext('2d');
 const out    = document.getElementById('calc');
 
-let crankAngle = Math.PI/3, spinning = false;
+let spinning = false;
 document.getElementById('togglePedals').addEventListener('click', () => {
   spinning = !spinning;
   if (spinning) requestAnimationFrame(animate);
 });
+
 function animate() {
   if (spinning) {
-    crankAngle += 0.05;
+    state.crankAngle = (state.crankAngle + 0.05) % (2 * Math.PI);
+    crankSlider.value = state.crankAngle;
     draw();
     requestAnimationFrame(animate);
   }
 }
+
+
+document.getElementById('crankSlider')
+  .addEventListener('input', e => {
+  // Incrementar ángulo y reflejarlo en el slider
+  state.crankAngle = (state.crankAngle + 0.05) % (2 * Math.PI);
+  crankSlider.value = state.crankAngle;
+  draw();
+  });
+
 
 function rad(d) { return d * Math.PI / 180; }
 function line(a,b){ ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
@@ -189,8 +207,8 @@ function draw() {
   // — Cranks y pedales (CRANK_LEN) —
   const crankPx = CRANK_LEN*s;
   const pedalR  = {
-    x: bb.x + crankPx*Math.cos(crankAngle),
-    y: bb.y + crankPx*Math.sin(crankAngle)
+    x: bb.x + crankPx*Math.cos(state.crankAngle),
+    y: bb.y + crankPx*Math.sin(state.crankAngle)
   };
   ctx.lineWidth = isHighlighted('CRANK_LEN') ? 4 : 2;
   ctx.strokeStyle = '#1976d2';

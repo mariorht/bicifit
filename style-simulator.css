@@ -39,7 +39,8 @@ width: 80px;
 .controls button {
 width: 100%;
 padding: 0.5rem;
-margin-top: 1rem;
+margin-top: 0.5rem;
+margin-bottom: 0.5rem;
 }
 .drawing {
 flex: 1;
@@ -91,4 +92,50 @@ border: 1px solid #ddd;
 .person-controls input {
   width: 4rem;
   margin-top: 0.25rem;
+}
+
+
+#crankSlider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: #ddd;
+  outline: none;
+  margin: 0.5rem 0;
+  transition: background 0.2s ease;
+}
+
+#crankSlider:hover {
+  background: #ccc;
+}
+
+#crankSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #1976d2;
+  cursor: pointer;
+  box-shadow: 0 0 2px rgba(0,0,0,0.5);
+  transition: background 0.2s ease;
+}
+
+#crankSlider::-webkit-slider-thumb:hover {
+  background: #135ba1;
+}
+
+#crankSlider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #1976d2;
+  cursor: pointer;
+  box-shadow: 0 0 2px rgba(0,0,0,0.5);
+  transition: background 0.2s ease;
+}
+
+#crankSlider::-moz-range-track {
+  background: transparent;
 }
