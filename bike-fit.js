@@ -13,6 +13,22 @@ ids.forEach(id => {
   el.addEventListener('input', e => { state[id] = +e.target.value || 0; draw(); });
 });
 
+
+// hover-key para resaltar
+state.hoverKey = null;
+document.querySelectorAll('.controls ul li').forEach(li => {
+  const key = li.dataset.key;
+  li.addEventListener('mouseenter', () => {
+    state.hoverKey = key;
+    draw();
+  });
+  li.addEventListener('mouseleave', () => {
+    state.hoverKey = null;
+    draw();
+  });
+});
+
+
 const canvas = document.getElementById('preview');
 const ctx = canvas.getContext('2d');
 const out = document.getElementById('calc');
@@ -42,6 +58,10 @@ function circleIntersections(A, rA, B, rB) {
   const rx = -dy * (h / d), ry = dx * (h / d);
   return [{x: xm + rx, y: ym + ry}, {x: xm - rx, y: ym - ry}];
 }
+function isHighlighted(...keys) {
+  return keys.includes(state.hoverKey);
+}
+
 
 function draw() {
   // Cargamos valores dinámicos
@@ -88,6 +108,7 @@ function draw() {
   const frontAxle = { x: headBot.x + forkPx * Math.cos(ha), y: bb.y };
 
   // Manillar
+  ctx.lineWidth = isHighlighted('barHeight','barLength','stemLength','SPACER_MM') ? 4 : 2;
   const uHT         = { x: Math.cos(ha), y: Math.sin(ha) };
   const spacerShift = state.barHeight;
   const spacerTop   = {
@@ -120,6 +141,7 @@ function draw() {
   dot(clamp);
 
   // Cuadro
+  ctx.lineWidth = isHighlighted('RC','HT_LEN','stack','reach','seatTube','ca','ha') ? 4 : 2;
   line(rearAxle, bb);
   line(bb, headBot);
   line(headBot, frontAxle);
@@ -132,6 +154,7 @@ function draw() {
   [bb, rearAxle, frontAxle, seatTop, headTop, headBot, saddle].forEach(dot);
 
   // Ruedas guía
+  ctx.lineWidth = isHighlighted('WHEEL_R') ? 4 : 2;
   ctx.setLineDash([4,6]);
   ctx.beginPath(); ctx.arc(rearAxle.x, rearAxle.y, WHEEL_R*s, 0, 2*Math.PI); ctx.stroke();
   ctx.beginPath(); ctx.arc(frontAxle.x, frontAxle.y, WHEEL_R*s, 0, 2*Math.PI); ctx.stroke();
@@ -153,6 +176,7 @@ function draw() {
   dot(pedalL);
 
   // ===== Ciclista: pierna =====
+  ctx.lineWidth = isHighlighted('THIGH_L','SHIN_L') ? 4 : 2;
   ctx.strokeStyle = '#d32f2f';
   ctx.fillStyle   = '#d32f2f';
   let knee = { x:(saddle.x+pedalR.x)/2, y:(saddle.y+pedalR.y)/2 };
@@ -163,6 +187,7 @@ function draw() {
   dot(knee);
 
   // ===== Ciclista: torso + brazo con ángulo manual =====
+  
   // Longitudes en px
   const L_torso = TORSO_L * s;
   const L1      = upperArm  * s;
@@ -183,6 +208,7 @@ function draw() {
     shoulder = shInts[0].y > shInts[1].y ? shInts[1] : shInts[0];
   }
   // torso
+  ctx.lineWidth = isHighlighted('TORSO_L') ? 4 : 2;
   line(saddle, shoulder);
   dot(shoulder);
 
@@ -196,12 +222,14 @@ function draw() {
     elbow = eInts.find(e => e.y > shoulder.y) || eInts[0];
   }
   // dibujo de brazo
+  ctx.lineWidth = isHighlighted('upperArm','lowerArm','elbowAngle') ? 4 : 2;
   line(shoulder, elbow);
   dot(elbow);
   line(elbow, hoodEnd);
   dot(hoodEnd);
 
   // Cabeza
+  ctx.lineWidth = isHighlighted('HEAD_R') ? 4 : 2;
   ctx.beginPath();
     ctx.arc(
       shoulder.x,
@@ -212,36 +240,27 @@ function draw() {
   ctx.stroke();
 
   // ==== Ángulo en el codo (decorativo) ====
-  // const v1 = { x: shoulder.x - elbow.x, y: shoulder.y - elbow.y };
-  // const v2 = { x: hoodEnd.x  - elbow.x, y: hoodEnd.y  - elbow.y };
-  // const dotp = v1.x*v2.x + v1.y*v2.y;
-  // const angleRad = Math.acos(Math.min(1, Math.max(-1, dotp/(Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y)))));
-  // const angleDeg = Math.round(angleRad * 180/Math.PI);
-  // const arcR = 20 * s;
-  // const a1 = Math.atan2(v1.y, v1.x);
-  // const a2 = Math.atan2(v2.y, v2.x);
-  // ctx.strokeStyle = '#d32f2f';
-  // ctx.beginPath(); ctx.arc(elbow.x, elbow.y, arcR, a1, a2); ctx.stroke();
-  // ctx.fillStyle = '#000';
-  // ctx.font = '14px sans-serif';
-  // let delta = a2 - a1; if (delta < 0) delta += 2*Math.PI;
-  // const mid = a1 + delta/2;
-  // ctx.fillText(
-  //   `${angleDeg}°`,
-  //   elbow.x + (arcR+10)*Math.cos(mid),
-  //   elbow.y + (arcR+10)*Math.sin(mid)
-  // );
+  const v1 = { x: shoulder.x - elbow.x, y: shoulder.y - elbow.y };
+  const v2 = { x: hoodEnd.x  - elbow.x, y: hoodEnd.y  - elbow.y };
+  const dotp = v1.x*v2.x + v1.y*v2.y;
+  const angleRad = Math.acos(Math.min(1, Math.max(-1, dotp/(Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y)))));
+  const angleDeg = Math.round(angleRad * 180/Math.PI);
+  const arcR = 40 * s;
+  const a1 = Math.atan2(v1.y, v1.x);
+  const a2 = Math.atan2(v2.y, v2.x);
+  ctx.strokeStyle = '#d32f2f';
+  ctx.beginPath(); ctx.arc(elbow.x, elbow.y, arcR, a1, a2); ctx.stroke();
+  ctx.fillStyle = '#000';
+  ctx.font = '14px sans-serif';
+  let delta = a2 - a1; if (delta < 0) delta += 2*Math.PI;
+  const mid = a1 + delta/2;
+  ctx.fillText(
+    `${angleDeg}°`,
+    elbow.x + (arcR+10)*Math.cos(mid),
+    elbow.y + (arcR+10)*Math.sin(mid)
+  );
 
-  // // ==== Cálculo stem & espaciadores ====
-  // ctx.strokeStyle = '#1976d2';
-  // const dx_mm    = (clamp.x - headTop.x) / s;
-  // const dy_mm    = (headTop.y - clamp.y) / s;
-  // const stemReal = Math.round(Math.hypot(dx_mm, dy_mm));
-  // const stemAng  = Math.round(Math.atan2(dy_mm, dx_mm) * 180/Math.PI);
-  // const spacers  = Math.ceil(Math.max(0, dy_mm) / SPACER_MM);
-  // out.textContent =
-  //   `Stem (user): ${state.stemLength} mm — Stem (real): ${stemReal} mm | ` +
-  //   `Angle: ${stemAng}° | Spacers: ${spacers}`;
+
 }
 
 
