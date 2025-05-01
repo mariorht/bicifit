@@ -17,7 +17,7 @@ const canvas = document.getElementById('preview');
 const ctx = canvas.getContext('2d');
 const out = document.getElementById('calc');
 
-let crankAngle = 0, spinning = false;
+let crankAngle = Math.PI/3, spinning = false;
 document.getElementById('togglePedals').addEventListener('click', () => {
   spinning = !spinning;
   if (spinning) requestAnimationFrame(animate);
